@@ -32,6 +32,8 @@ class FindResourceTest : YamlRecipeTest {
               icon: github
               source:
                 uri: ((github-repo))
+            - name: file
+              type: file
         """,
         after = """
             resources:
@@ -40,6 +42,8 @@ class FindResourceTest : YamlRecipeTest {
               icon: github
               source:
                 uri: ((github-repo))
+            - name: file
+              type: file
         """
     )
 }
