@@ -16,34 +16,23 @@
 package org.openrewrite.concourse
 
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.io.TempDir
 import org.openrewrite.Recipe
 import org.openrewrite.yaml.YamlRecipeTest
-import java.nio.file.Path
 
 class FindResourceTest : YamlRecipeTest {
     override val recipe: Recipe
         get() = FindResource("git")
 
     @Test
-    fun concourseResource(@TempDir tempDir: Path) = assertChanged(
-        before = tempDir.resolve("ci/pipeline.yml").toFile().apply {
-            parentFile.mkdirs()
-            writeText(
-                """
-                    resources:
-                    - name: git-repo
-                      type: git
-                      icon: github
-                      source:
-                        uri: ((github-repo))
-                        username: ((github-username))
-                        password: ((github-ci-release-token))
-                        branch: ((branch))
-                """.trimIndent()
-            )
-        },
-        relativeTo = tempDir,
+    fun concourseResource() = assertChanged(
+        before = """
+            resources:
+            - name: git-repo
+              type: git
+              icon: github
+              source:
+                uri: ((github-repo))
+        """,
         after = """
             resources:
             - name: git-repo
@@ -51,9 +40,6 @@ class FindResourceTest : YamlRecipeTest {
               icon: github
               source:
                 uri: ((github-repo))
-                username: ((github-username))
-                password: ((github-ci-release-token))
-                branch: ((branch))
         """
     )
 }

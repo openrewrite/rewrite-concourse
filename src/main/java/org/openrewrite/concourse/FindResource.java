@@ -30,9 +30,8 @@ public class FindResource extends Recipe {
     }
 
     @Override
-    protected YamlVisitor<ExecutionContext> getSingleSourceApplicableTest() {
-        JsonPathMatcher resource = new JsonPathMatcher("$.resources[?(@.type == '" + type + "')]");
-
+    protected YamlVisitor<ExecutionContext> getVisitor() {
+        JsonPathMatcher resource = new JsonPathMatcher("$.resources[*].type[@ == ' + " + type + "']");
         return new YamlVisitor<ExecutionContext>() {
             @Override
             public Yaml visitMappingEntry(Yaml.Mapping.Entry entry, ExecutionContext executionContext) {
