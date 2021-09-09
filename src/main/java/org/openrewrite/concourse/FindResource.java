@@ -41,7 +41,7 @@ public class FindResource extends Recipe {
 
     @Override
     public String getDescription() {
-        return "Find a Concourse resource by name";
+        return "Find a Concourse resource by name.";
     }
 
     @Override
