@@ -15,14 +15,14 @@
  */
 package org.openrewrite.concourse
 
-import org.assertj.core.api.Assertions
 import org.junit.jupiter.api.Test
 import org.openrewrite.yaml.YamlRecipeTest
 
-class UpdateGitResourceURITest : YamlRecipeTest {
+class ChangeValueTest : YamlRecipeTest {
     @Test
     fun updateGitURI() = assertChanged(
-        recipe = UpdateGitResourceURI(
+        recipe = ChangeValue(
+            "$.resources[?(@.type == 'git')].source.uri",
             "https://github.com/openrewrite/rewrite0",
             "git@github.com:openrewrite/rewrite1.git",
             null
@@ -52,8 +52,34 @@ class UpdateGitResourceURITest : YamlRecipeTest {
     )
 
     @Test
+    fun updateProperty() = assertChanged(
+        recipe = ChangeValue(
+            "$.resources[?(@.type == 'git')].source.uri",
+            null,
+            "git@github.com:openrewrite/rewrite1.git",
+            null
+        ),
+        dependsOn = arrayOf(
+            """
+            resources:
+            - name: git-repo0
+              type: git
+              source:
+                uri: ((gituri))
+        """
+        ),
+        before = """
+            gituri: https://github.com/openrewrite/rewrite0
+        """,
+        after = """
+            gituri: git@github.com:openrewrite/rewrite1.git
+        """
+    )
+
+    @Test
     fun oldURIAsEmpty() = assertChanged(
-        recipe = UpdateGitResourceURI(
+        recipe = ChangeValue(
+            "$.resources[?(@.type == 'git')].source.uri",
             null,
             "git@github.com/openrewrite/rewrite1.git",
             null
@@ -92,7 +118,8 @@ class UpdateGitResourceURITest : YamlRecipeTest {
 
     @Test
     fun oldURIAsRegex() = assertChanged(
-        recipe = UpdateGitResourceURI(
+        recipe = ChangeValue(
+            "$.resources[?(@.type == 'git')].source.uri",
             ".*@.*",
             "https://github.com/openrewrite/rewrite",
             null
@@ -128,14 +155,4 @@ class UpdateGitResourceURITest : YamlRecipeTest {
                 uri: https://github.com/openrewrite/rewrite0
         """
     )
-
-    @Test
-    fun checkValidation() {
-        val recipe = UpdateGitResourceURI("*unmatched*", "newURI", null)
-        val valid = recipe.validate()
-        Assertions.assertThat(valid.isValid).isFalse
-        Assertions.assertThat(valid.failures()).hasSize(1)
-        Assertions.assertThat(valid.failures()[0].property).isEqualTo("oldURIPattern")
-    }
-
 }
