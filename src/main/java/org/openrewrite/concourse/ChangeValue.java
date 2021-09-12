@@ -18,20 +18,19 @@ package org.openrewrite.concourse;
 import lombok.EqualsAndHashCode;
 import lombok.Value;
 import org.openrewrite.*;
+import org.openrewrite.internal.ListUtils;
 import org.openrewrite.internal.lang.Nullable;
-import org.openrewrite.marker.RecipeSearchResult;
 import org.openrewrite.yaml.JsonPathMatcher;
 import org.openrewrite.yaml.YamlIsoVisitor;
 import org.openrewrite.yaml.YamlVisitor;
 import org.openrewrite.yaml.tree.Yaml;
 
-import java.util.Collections;
+import java.nio.file.Path;
+import java.nio.file.PathMatcher;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
-import java.util.stream.Stream;
-
-import static java.util.Collections.emptySet;
-import static java.util.stream.Collectors.toSet;
 
 @Value
 @EqualsAndHashCode(callSuper = true)
@@ -89,58 +88,65 @@ public class ChangeValue extends Recipe {
     }
 
     @Override
-    protected TreeVisitor<?, ExecutionContext> getSingleSourceApplicableTest() {
-        if (fileMatcher != null) {
-            return new YamlVisitor<ExecutionContext>() {
-                @Override
-                public Yaml visitDocuments(Yaml.Documents documents, ExecutionContext executionContext) {
-                    //noinspection ConstantConditions
-                    return executionContext.getMessage(CHANGE_CONCOURSE_PARAMETER) != null ?
-                            documents.withMarkers(documents.getMarkers().addIfAbsent(new RecipeSearchResult(Tree.randomId(), null, "could have parameter"))) :
-                            (Yaml) new HasSourcePath<>(fileMatcher).visitNonNull(documents, executionContext);
-                }
-            };
-        }
-        return null;
-    }
-
-    @Override
-    protected YamlVisitor<ExecutionContext> getVisitor() {
+    protected List<SourceFile> visit(List<SourceFile> before, ExecutionContext ctx) {
         JsonPathMatcher keyPathMatcher = new JsonPathMatcher(keyPath);
         Pattern oldValuePattern = oldValue == null ? null : Pattern.compile(oldValue);
-        return new YamlIsoVisitor<ExecutionContext>() {
-            @Override
-            public Yaml.Mapping.Entry visitMappingEntry(Yaml.Mapping.Entry entry, ExecutionContext ctx) {
-                Yaml.Mapping.Entry e = super.visitMappingEntry(entry, ctx);
-                for (ChangeParameterValue changeParam : ctx.getMessage(CHANGE_CONCOURSE_PARAMETER, Collections.<ChangeParameterValue>emptySet())) {
-                    e = maybeReplaceValue(e, changeParam.getParameter(), changeParam.getValue(), ctx);
-                }
-                e = maybeReplaceValue(e, keyPathMatcher, newValue, ctx);
-                return e;
-            }
+        List<JsonPathMatcher> parametersToChange = new ArrayList<>();
 
-            private Yaml.Mapping.Entry maybeReplaceValue(Yaml.Mapping.Entry e, JsonPathMatcher matcher, String newValue, ExecutionContext ctx) {
-                if (matcher.matches(getCursor()) && e.getValue() instanceof Yaml.Scalar) {
-                    if (Parameters.isParameter(e.getValue())) {
-                        ctx.computeMessage(CHANGE_CONCOURSE_PARAMETER,
-                                new ChangeParameterValue(Parameters.toJsonPath(e.getValue()), newValue),
-                                emptySet(),
-                                (changeParam, acc) -> Stream.concat(acc.stream(), Stream.of(changeParam)).collect(toSet()));
-                    } else if (e.getValue() instanceof Yaml.Scalar) {
-                        Yaml.Scalar value = (Yaml.Scalar) e.getValue();
-                        if (oldValuePattern == null || oldValuePattern.matcher(value.getValue()).matches()) {
-                            e = e.withValue(value.withValue(newValue));
-                        }
-                    }
+        YamlVisitor<ExecutionContext> findParametersToChange = new YamlVisitor<ExecutionContext>() {
+            @Override
+            public Yaml visitMappingEntry(Yaml.Mapping.Entry entry, ExecutionContext ctx) {
+                if (keyPathMatcher.matches(getCursor()) && entry.getValue() instanceof Yaml.Scalar &&
+                        Parameters.isParameter(entry.getValue())) {
+                    parametersToChange.add(Parameters.toJsonPath(entry.getValue()));
                 }
-                return e;
+                return super.visitMappingEntry(entry, ctx);
             }
         };
-    }
 
-    @Value
-    private static class ChangeParameterValue {
-        JsonPathMatcher parameter;
-        String value;
+        for (SourceFile sourceFile : before) {
+            findParametersToChange.visit(sourceFile, ctx);
+        }
+
+        return ListUtils.map(before, sourceFile -> {
+            if (!(sourceFile instanceof Yaml.Documents)) {
+                return sourceFile;
+            }
+
+            boolean matchesFile = fileMatcher == null;
+            if (!matchesFile) {
+                Path sourcePath = sourceFile.getSourcePath();
+                PathMatcher pathMatcher = sourcePath.getFileSystem().getPathMatcher("glob:" + fileMatcher);
+                matchesFile = pathMatcher.matches(sourcePath);
+            }
+
+            if (matchesFile) {
+                return (SourceFile) new YamlIsoVisitor<ExecutionContext>() {
+                    @Override
+                    public Yaml.Mapping.Entry visitMappingEntry(Yaml.Mapping.Entry entry, ExecutionContext ctx) {
+                        Yaml.Mapping.Entry e = super.visitMappingEntry(entry, ctx);
+                        for (JsonPathMatcher changeParam : parametersToChange) {
+                            e = maybeReplaceValue(e, changeParam);
+                        }
+                        e = maybeReplaceValue(e, keyPathMatcher);
+                        return e;
+                    }
+
+                    private Yaml.Mapping.Entry maybeReplaceValue(Yaml.Mapping.Entry e, JsonPathMatcher matcher) {
+                        if (matcher.matches(getCursor()) && e.getValue() instanceof Yaml.Scalar) {
+                            if (e.getValue() instanceof Yaml.Scalar) {
+                                Yaml.Scalar value = (Yaml.Scalar) e.getValue();
+                                if (oldValuePattern == null || oldValuePattern.matcher(value.getValue()).matches()) {
+                                    e = e.withValue(value.withValue(newValue));
+                                }
+                            }
+                        }
+                        return e;
+                    }
+                }.visitNonNull(sourceFile, ctx);
+            }
+
+            return sourceFile;
+        });
     }
 }
