@@ -30,8 +30,8 @@ import org.openrewrite.yaml.tree.Yaml;
 @EqualsAndHashCode(callSuper = true)
 public class FindResource extends Recipe {
     @Option(displayName = "Type",
-        description = "Resource type",
-        example = "git")
+            description = "Resource type",
+            example = "git")
     String type;
 
     @Override
@@ -50,7 +50,7 @@ public class FindResource extends Recipe {
         return new YamlVisitor<ExecutionContext>() {
             @Override
             public Yaml visitMappingEntry(Yaml.Mapping.Entry entry, ExecutionContext executionContext) {
-                if(resource.matches(getCursor()) && entry.getValue() instanceof Yaml.Scalar &&
+                if (resource.matches(getCursor()) && entry.getValue() instanceof Yaml.Scalar &&
                         ((Yaml.Scalar) entry.getValue()).getValue().equals(type)) {
                     return entry.withMarkers(entry.getMarkers().addIfAbsent(new YamlSearchResult(Tree.randomId(), FindResource.this, null)));
                 }

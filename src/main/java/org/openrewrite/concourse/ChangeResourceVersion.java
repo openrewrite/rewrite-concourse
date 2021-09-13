@@ -78,7 +78,7 @@ public class ChangeResourceVersion extends Recipe {
                         //noinspection ConstantConditions
                         return null; // unpin
                     } else if (entry.getValue() instanceof Yaml.Scalar) {
-                        if(!((Yaml.Scalar) entry.getValue()).getValue().equals(version)) {
+                        if (!((Yaml.Scalar) entry.getValue()).getValue().equals(version)) {
                             return entry.withValue(((Yaml.Scalar) entry.getValue()).withValue(version));
                         }
                     }

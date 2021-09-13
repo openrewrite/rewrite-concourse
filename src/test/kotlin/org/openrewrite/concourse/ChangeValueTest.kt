@@ -65,14 +65,14 @@ class ChangeValueTest : YamlRecipeTest {
             - name: git-repo0
               type: git
               source:
-                uri: ((gituri))
+                uri: ((git-uri))
         """
         ),
         before = """
-            gituri: https://github.com/openrewrite/rewrite0
+            git-uri: https://github.com/openrewrite/rewrite0
         """,
         after = """
-            gituri: git@github.com:openrewrite/rewrite1.git
+            git-uri: git@github.com:openrewrite/rewrite1.git
         """
     )
 
