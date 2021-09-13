@@ -16,11 +16,13 @@
 package org.openrewrite.concourse;
 
 import lombok.EqualsAndHashCode;
+import lombok.Value;
 import org.openrewrite.Incubating;
 import org.openrewrite.Option;
 import org.openrewrite.Recipe;
 import org.openrewrite.internal.lang.Nullable;
 
+@Value
 @EqualsAndHashCode(callSuper = true)
 @Incubating(since = "0.1.0")
 public class UpdateGitResourceUri extends Recipe {
@@ -29,19 +31,19 @@ public class UpdateGitResourceUri extends Recipe {
             required = false,
             example = "https://github.com/openrewrite/rewrite")
     @Nullable
-    private final String oldURIPattern;
+    String oldURIPattern;
 
     @Option(displayName = "New URI",
             description = "New URI value to replace the old URI value with.",
             example = "git@gitlab.com:openrewrite/rewrite.git")
-    private final String newURI;
+    String newURI;
 
     @Option(displayName = "Optional file matcher",
             description = "Matching files will be modified. This is a glob expression.",
             required = false,
             example = "**/pipeline*.yml")
     @Nullable
-    private final String fileMatcher;
+    String fileMatcher;
 
     @Override
     public String getDisplayName() {
