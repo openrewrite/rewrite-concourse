@@ -106,6 +106,28 @@ class ChangeValueTest : YamlRecipeTest {
     )
 
     @Test
+    fun doNothingIfPropertyKeyNotFound() = assertUnchanged(
+        recipe = ChangeValue(
+            "$.resources[?(@.type == 'git')].source.uri",
+            null,
+            "git@github.com:openrewrite/rewrite1.git",
+            null
+        ),
+        dependsOn = arrayOf(
+            """
+            resources:
+            - name: git-repo0
+              type: git
+              source:
+                uri: ((git-uri))
+        """
+        ),
+        before = """
+            some-other-key: https://github.com/openrewrite/rewrite0
+        """
+    )
+
+    @Test
     fun oldURIAsEmpty() = assertChanged(
         recipe = ChangeValue(
             "$.resources[?(@.type == 'git')].source.uri",
