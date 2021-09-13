@@ -77,6 +77,35 @@ class ChangeValueTest : YamlRecipeTest {
     )
 
     @Test
+    fun updatePropertyWithNestedKey() = assertChanged(
+        recipe = ChangeValue(
+            "$.resources[?(@.type == 'git')].source.uri",
+            null,
+            "git@github.com:openrewrite/rewrite1.git",
+            null
+        ),
+        dependsOn = arrayOf(
+            """
+            resources:
+            - name: git-repo0
+              type: git
+              source:
+                uri: ((git.source_code.uri))
+        """
+        ),
+        before = """
+            git:
+              source_code:
+                uri: https://github.com/openrewrite/rewrite0
+        """,
+        after = """
+            git:
+              source_code:
+                uri: git@github.com:openrewrite/rewrite1.git
+        """
+    )
+
+    @Test
     fun oldURIAsEmpty() = assertChanged(
         recipe = ChangeValue(
             "$.resources[?(@.type == 'git')].source.uri",
