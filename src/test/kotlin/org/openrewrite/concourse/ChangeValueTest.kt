@@ -16,6 +16,7 @@
 package org.openrewrite.concourse
 
 import org.junit.jupiter.api.Test
+import org.openrewrite.Issue
 import org.openrewrite.yaml.YamlRecipeTest
 
 class ChangeValueTest : YamlRecipeTest {
@@ -102,6 +103,29 @@ class ChangeValueTest : YamlRecipeTest {
             git:
               source_code:
                 uri: git@github.com:openrewrite/rewrite1.git
+        """
+    )
+
+    @Test
+    @Issue("https://github.com/openrewrite/rewrite-concourse/issues/2")
+    fun doNotReplaceOriginalParameterReferenceWhenParameterized() = assertUnchanged(
+        recipe = ChangeValue(
+            "$.resources[?(@.type == 'git')].source.uri",
+            null,
+            "git@github.com:openrewrite/rewrite1.git",
+            null
+        ),
+        dependsOn = arrayOf(
+            """
+            git_uri: https://github.com/openrewrite/rewrite0
+        """
+        ),
+        before = """
+            resources:
+            - name: git-repo0
+              type: git
+              source:
+                uri: ((git_uri))
         """
     )
 

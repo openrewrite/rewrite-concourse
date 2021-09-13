@@ -133,6 +133,10 @@ public class ChangeValue extends Recipe {
                     }
 
                     private Yaml.Mapping.Entry maybeReplaceValue(Yaml.Mapping.Entry e, JsonPathMatcher matcher) {
+                        // do not replace the original value if it is parameterized.
+                        if (Parameters.isParameter(e.getValue()) && keyPathMatcher.matches(getCursor())) {
+                            return e;
+                        }
                         if (matcher.matches(getCursor()) && e.getValue() instanceof Yaml.Scalar) {
                             if (e.getValue() instanceof Yaml.Scalar) {
                                 Yaml.Scalar value = (Yaml.Scalar) e.getValue();
