@@ -35,8 +35,6 @@ import java.util.regex.PatternSyntaxException;
 @Value
 @EqualsAndHashCode(callSuper = true)
 public class ChangeValue extends Recipe {
-    private static final String CHANGE_CONCOURSE_PARAMETER = "changeConcourseParameter";
-
     @Option(displayName = "Key path",
             description = "The key to match and replace.",
             example = "$.resources[?(@.type == 'git')].source.uri")
