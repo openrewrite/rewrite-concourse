@@ -133,16 +133,21 @@ public class ChangeValue extends Recipe {
                     }
 
                     private Yaml.Mapping.Entry maybeReplaceValue(Yaml.Mapping.Entry e, JsonPathMatcher matcher) {
-                        // do not replace the original value if it is parameterized.
-                        if (Parameters.isParameter(e.getValue()) && keyPathMatcher.matches(getCursor())) {
-                            return e;
-                        }
                         if (matcher.matches(getCursor()) && e.getValue() instanceof Yaml.Scalar) {
-                            if (e.getValue() instanceof Yaml.Scalar) {
-                                Yaml.Scalar value = (Yaml.Scalar) e.getValue();
-                                if (oldValuePattern == null || oldValuePattern.matcher(value.getValue()).matches()) {
-                                    e = e.withValue(value.withValue(newValue));
+                            Yaml.Scalar scalar = (Yaml.Scalar) e.getValue();
+                            // do not replace the original value if it is parameterized.
+                            if (Parameters.isParameter(scalar)) {
+                                // if we're on a redirected parameter, recurse on the newly-parameterized value
+                                if (!keyPathMatcher.matches(getCursor())) {
+                                    String value = scalar.getValue();
+                                    String asKeyPath = "$." + scalar.getValue().substring(2, value.length() - 2);
+                                    doNext(new ChangeValue(asKeyPath, null, newValue, fileMatcher));
                                 }
+                                return e;
+                            }
+
+                            if (oldValuePattern == null || oldValuePattern.matcher(scalar.getValue()).matches()) {
+                                e = e.withValue(scalar.withValue(newValue));
                             }
                         }
                         return e;

@@ -15,6 +15,7 @@
  */
 package org.openrewrite.concourse
 
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.openrewrite.Issue
 import org.openrewrite.yaml.YamlRecipeTest
@@ -126,6 +127,64 @@ class ChangeValueTest : YamlRecipeTest {
               type: git
               source:
                 uri: ((git_uri))
+        """
+    )
+
+    @Test
+    @Issue("https://github.com/openrewrite/rewrite-concourse/issues/2")
+    fun handleMultipleLayersOfParameterRedirection() = assertChanged(
+        recipe = ChangeValue(
+            "$.resources[?(@.type == 'git')].source.uri",
+            null,
+            "git@github.com:openrewrite/rewrite1.git",
+            null
+        ),
+        dependsOn = arrayOf(
+            """
+            resources:
+            - name: git-repo0
+              type: git
+              source:
+                uri: ((git_uri_0))
+            """,
+            """
+            git_uri_0: ((git.git_uri_1))
+        """
+        ),
+        before = """
+            git:
+              git_uri_1: https://github.com/openrewrite/rewrite0
+        """,
+        after = """
+            git:
+              git_uri_1: git@github.com:openrewrite/rewrite1.git
+        """
+    )
+
+    @Test
+    @Disabled
+    @Issue("https://github.com/openrewrite/rewrite-concourse/issues/2")
+    fun breakInfiniteRecursion() = assertUnchanged(
+        recipe = ChangeValue(
+            "$.resources[?(@.type == 'git')].source.uri",
+            null,
+            "git@github.com:openrewrite/rewrite1.git",
+            null
+        ),
+        dependsOn = arrayOf(
+            """
+            resources:
+            - name: git-repo0
+              type: git
+              source:
+                uri: ((git_uri_0))
+            """,
+            """
+            git_uri_0: ((git_uri_1))
+        """,
+        ),
+        before = """
+            git_uri_1: ((git_uri_0))
         """
     )
 
