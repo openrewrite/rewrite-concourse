@@ -18,7 +18,7 @@ package org.openrewrite.concourse;
 import org.openrewrite.yaml.JsonPathMatcher;
 import org.openrewrite.yaml.tree.Yaml;
 
-public class Parameters {
+public final class Parameters {
     private Parameters() {
     }
 

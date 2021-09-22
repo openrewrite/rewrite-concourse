@@ -60,7 +60,7 @@ public class ChangeResourceVersion extends Recipe {
             @Override
             public Yaml visitMapping(Yaml.Mapping mapping, ExecutionContext ctx) {
                 if (resourceMatcher.encloses(getCursor())) {
-                    if (version != null && mapping.getEntries().stream().noneMatch(e -> e.getKey().getValue().equals("version"))) {
+                    if (version != null && mapping.getEntries().stream().noneMatch(e -> "version".equals(e.getKey().getValue()))) {
                         Yaml.Mapping versionMapping = (Yaml.Mapping) new YamlParser().parse("version: " + version)
                                 .get(0).getDocuments().get(0).getBlock();
                         Yaml.Mapping.Entry versionEntry = versionMapping.getEntries().get(0);
