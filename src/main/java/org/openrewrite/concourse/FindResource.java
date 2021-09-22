@@ -20,10 +20,8 @@ import lombok.Value;
 import org.openrewrite.ExecutionContext;
 import org.openrewrite.Option;
 import org.openrewrite.Recipe;
-import org.openrewrite.Tree;
 import org.openrewrite.yaml.JsonPathMatcher;
 import org.openrewrite.yaml.YamlVisitor;
-import org.openrewrite.yaml.search.YamlSearchResult;
 import org.openrewrite.yaml.tree.Yaml;
 
 @Value
@@ -52,7 +50,7 @@ public class FindResource extends Recipe {
             public Yaml visitMappingEntry(Yaml.Mapping.Entry entry, ExecutionContext executionContext) {
                 if (resource.matches(getCursor()) && entry.getValue() instanceof Yaml.Scalar &&
                         ((Yaml.Scalar) entry.getValue()).getValue().equals(type)) {
-                    return entry.withMarkers(entry.getMarkers().addIfAbsent(new YamlSearchResult(Tree.randomId(), FindResource.this, null)));
+                    return entry.withMarkers(entry.getMarkers().searchResult());
                 }
                 return super.visitMappingEntry(entry, executionContext);
             }

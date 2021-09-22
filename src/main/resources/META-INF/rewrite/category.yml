@@ -17,4 +17,4 @@
 type: specs.openrewrite.org/v1beta/category
 name: Concourse
 packageName: org.openrewrite.concourse
-description: 'Recipes to perform [Concourse](https://concourse-ci.org/) hygiene and migration tasks.'
+description: Recipes to perform [Concourse](https://concourse-ci.org/) hygiene and migration tasks.
