@@ -10,3 +10,4 @@
 This project implements [Rewrite recipes](https://github.com/openrewrite/rewrite) to perform Concourse hygiene and migration tasks.
 
 pull-request-example
+
