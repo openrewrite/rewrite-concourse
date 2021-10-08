@@ -23,8 +23,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        java: ["11"]
-        os: ["ubuntu-latest"]
+        java: ["11", "16"]
+        os: ["ubuntu-latest", "macos-latest"]
     runs-on: ${{ matrix.os }}
     if: github.repository_owner == 'openrewrite'
     steps:
