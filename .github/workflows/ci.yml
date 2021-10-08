@@ -23,8 +23,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        java: ["11", "16"]
-        os: ["ubuntu-latest", "macos-latest"]
+        java: ["11"]
+        os: ["ubuntu-latest"]
     runs-on: ${{ matrix.os }}
     if: github.repository_owner == 'openrewrite'
     steps:
@@ -36,7 +36,7 @@ jobs:
         with:
           distribution: "temurin"
           java-version: ${{ matrix.java }}
-          cache: 'gradle'
+          cache: "gradle"
       - name: build
         run: ./gradlew ${GRADLE_SWITCHES} build test
       - name: publish-snapshots
