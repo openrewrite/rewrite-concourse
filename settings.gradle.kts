@@ -1,5 +1,9 @@
 rootProject.name = "rewrite-concourse"
 
+plugins {
+    id("com.gradle.enterprise") version "3.7"
+}
+
 gradleEnterprise {
     server = "https://ge.openrewrite.org/"
 
