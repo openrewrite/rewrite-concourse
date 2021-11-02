@@ -43,7 +43,7 @@ jobs:
       - name: build
         uses: gradle/gradle-build-action@v2
         with:
-          arguments: ${GRADLE_SWITCHES} build test
+          arguments: ${{ env.GRADLE_SWITCHES }} build test
         env:
           GRADLE_ENTERPRISE_ACCESS_KEY: ${{ secrets.GRADLE_ENTERPRISE_ACCESS_KEY }}
 
@@ -64,7 +64,7 @@ jobs:
       - name: publish-snapshots
         uses: gradle/gradle-build-action@v2
         with:
-          arguments: ${GRADLE_SWITCHES} snapshot publish -PforceSigning -x test
+          arguments: ${{ env.GRADLE_SWITCHES }} snapshot publish -PforceSigning -x test
         env:
           ORG_GRADLE_PROJECT_sonatypeUsername: ${{ secrets.OSSRH_USERNAME }}
           ORG_GRADLE_PROJECT_sonatypePassword: ${{ secrets.OSSRH_TOKEN }}

@@ -30,7 +30,7 @@ jobs:
         uses: gradle/gradle-build-action@v2
         with:
           arguments: |
-            ${GRADLE_SWITCHES}
+            ${{ env.GRADLE_SWITCHES }}
             -Prelease.disableGitChecks=true
             -Prelease.useLastTag=true
             candidate
@@ -48,7 +48,7 @@ jobs:
         uses: gradle/gradle-build-action@v2
         with:
           arguments: |
-            ${GRADLE_SWITCHES}
+            ${{ env.GRADLE_SWITCHES }}
             -Prelease.disableGitChecks=true
             -Prelease.useLastTag=true
             final
