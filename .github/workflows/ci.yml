@@ -24,4 +24,4 @@ jobs:
       ossrh_signing_key: ${{ secrets.OSSRH_SIGNING_KEY }}
       ossrh_signing_password: ${{ secrets.OSSRH_SIGNING_PASSWORD }}
     with:
-      publish_snapshots: false
+      publish_snapshots: "no"
