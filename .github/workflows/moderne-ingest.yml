@@ -8,6 +8,10 @@ on:
   schedule:
     - cron: 0 18 * * *
 
+concurrency:
+  group: ingest-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   ingest:
     uses: openrewrite/gh-automation/.github/workflows/moderne-ingest.yml@main

@@ -14,6 +14,10 @@ on:
   schedule:
     - cron: 0 18 * * *
 
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build:
     uses: openrewrite/gh-automation/.github/workflows/ci-gradle.yml@main

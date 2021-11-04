@@ -7,6 +7,10 @@ on:
       - v[0-9]+.[0-9]+.[0-9]+
       - v[0-9]+.[0-9]+.[0-9]+-rc.[0-9]+
 
+concurrency:
+  group: publish-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
   release:
     uses: openrewrite/gh-automation/.github/workflows/publish-gradle.yml@main
