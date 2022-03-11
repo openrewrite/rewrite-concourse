@@ -27,6 +27,8 @@ import org.openrewrite.yaml.YamlParser;
 import org.openrewrite.yaml.YamlVisitor;
 import org.openrewrite.yaml.tree.Yaml;
 
+import java.time.Duration;
+
 @Value
 @EqualsAndHashCode(callSuper = true)
 public class ChangeResourceVersion extends Recipe {
@@ -50,6 +52,11 @@ public class ChangeResourceVersion extends Recipe {
     @Override
     public String getDescription() {
         return "Pin or unpin a resource to a particular version.";
+    }
+
+    @Override
+    public Duration getEstimatedEffortPerOccurrence() {
+        return Duration.ofMinutes(5);
     }
 
     @Override

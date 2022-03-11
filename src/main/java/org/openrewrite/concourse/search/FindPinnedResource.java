@@ -21,6 +21,8 @@ import org.openrewrite.Recipe;
 import org.openrewrite.internal.lang.Nullable;
 import org.openrewrite.yaml.search.FindKey;
 
+import java.time.Duration;
+
 public class FindPinnedResource extends Recipe {
     @Option(displayName = "Resource type",
             description = "The resource type to search for. Leave empty to find all pins.",
@@ -38,6 +40,11 @@ public class FindPinnedResource extends Recipe {
     @Override
     public String getDescription() {
         return "Find resources of a particular type that have pinned versions.";
+    }
+
+    @Override
+    public Duration getEstimatedEffortPerOccurrence() {
+        return Duration.ofMinutes(5);
     }
 
     public FindPinnedResource(@Nullable String resourceType) {

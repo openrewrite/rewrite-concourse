@@ -27,6 +27,7 @@ import org.openrewrite.yaml.tree.Yaml;
 
 import java.nio.file.Path;
 import java.nio.file.PathMatcher;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Pattern;
@@ -45,6 +46,11 @@ public class ChangeValue extends Recipe {
             required = false)
     @Nullable
     String oldValue;
+
+    @Override
+    public Duration getEstimatedEffortPerOccurrence() {
+        return Duration.ofMinutes(5);
+    }
 
     @Option(displayName = "New value",
             description = "New value to replace the old value with.")

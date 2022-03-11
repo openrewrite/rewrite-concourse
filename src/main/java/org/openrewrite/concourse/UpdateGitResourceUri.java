@@ -22,6 +22,8 @@ import org.openrewrite.Option;
 import org.openrewrite.Recipe;
 import org.openrewrite.internal.lang.Nullable;
 
+import java.time.Duration;
+
 @Value
 @EqualsAndHashCode(callSuper = true)
 @Incubating(since = "0.1.0")
@@ -53,6 +55,11 @@ public class UpdateGitResourceUri extends Recipe {
     @Override
     public String getDescription() {
         return "Update git resource `source.uri` URI values to point to a new URI value.";
+    }
+
+    @Override
+    public Duration getEstimatedEffortPerOccurrence() {
+        return Duration.ofMinutes(5);
     }
 
     public UpdateGitResourceUri(@Nullable String oldURIPattern, String newURI, @Nullable String fileMatcher) {

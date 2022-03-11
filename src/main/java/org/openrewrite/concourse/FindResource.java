@@ -24,6 +24,8 @@ import org.openrewrite.yaml.JsonPathMatcher;
 import org.openrewrite.yaml.YamlVisitor;
 import org.openrewrite.yaml.tree.Yaml;
 
+import java.time.Duration;
+
 @Value
 @EqualsAndHashCode(callSuper = true)
 public class FindResource extends Recipe {
@@ -35,6 +37,11 @@ public class FindResource extends Recipe {
     @Override
     public String getDisplayName() {
         return "Find resource";
+    }
+
+    @Override
+    public Duration getEstimatedEffortPerOccurrence() {
+        return Duration.ofMinutes(5);
     }
 
     @Override
