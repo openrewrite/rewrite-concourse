@@ -24,26 +24,26 @@ class ChangeResourceVersionTest : YamlRecipeTest {
         recipe = ChangeResourceVersion("git", "2.0"),
         before = """
             resources:
-            - name: git-repo
-              type: git
-              version: 1.0
-            - name: git-repo2
-              type: git
-              version: 2.0
-            - name: git-repo3
-              type: git
+              - name: git-repo
+                type: git
+                version: 1.0
+              - name: git-repo2
+                type: git
+                version: 2.0
+              - name: git-repo3
+                type: git
         """,
         after = """
             resources:
-            - name: git-repo
-              type: git
-              version: 2.0
-            - name: git-repo2
-              type: git
-              version: 2.0
-            - name: git-repo3
-              type: git
-              version: 2.0
+              - name: git-repo
+                type: git
+                version: 2.0
+              - name: git-repo2
+                type: git
+                version: 2.0
+              - name: git-repo3
+                type: git
+                version: 2.0
         """
     )
 
@@ -52,23 +52,23 @@ class ChangeResourceVersionTest : YamlRecipeTest {
         recipe = ChangeResourceVersion("git", null),
         before = """
             resources:
-            - name: git-repo
-              type: git
-              version: 1.0
-            - name: git-repo2
-              type: git
-              version: 2.0
-            - name: git-repo3
-              type: git
+              - name: git-repo
+                type: git
+                version: 1.0
+              - name: git-repo2
+                type: git
+                version: 2.0
+              - name: git-repo3
+                type: git
         """,
         after = """
             resources:
-            - name: git-repo
-              type: git
-            - name: git-repo2
-              type: git
-            - name: git-repo3
-              type: git
+              - name: git-repo
+                type: git
+              - name: git-repo2
+                type: git
+              - name: git-repo3
+                type: git
         """
     )
 }
