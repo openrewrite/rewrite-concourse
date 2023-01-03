@@ -31,12 +31,6 @@ plugins {
     id("nebula.javadoc-jar") version "17.3.2"
     id("nebula.source-jar") version "17.3.2"
     id("nebula.maven-apache-license") version "17.3.2"
-
-    id("org.openrewrite.rewrite") version "latest.release"
-}
-
-rewrite {
-    activeRecipe("org.openrewrite.java.format.AutoFormat", "org.openrewrite.java.cleanup.Cleanup")
 }
 
 apply(plugin = "nebula.publish-verification")
