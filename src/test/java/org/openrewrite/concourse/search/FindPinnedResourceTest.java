@@ -13,17 +13,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.openrewrite.concourse
+package org.openrewrite.concourse.search;
 
-import org.junit.jupiter.api.Test
-import org.openrewrite.yaml.YamlRecipeTest
+import org.junit.jupiter.api.Test;
+import org.openrewrite.test.RewriteTest;
 
-class ChangeResourceVersionTest : YamlRecipeTest {
+import static org.openrewrite.yaml.Assertions.yaml;
+
+class FindPinnedResourceTest implements RewriteTest {
+
     @Test
-    fun pinVersion() = assertChanged(
-        recipe = ChangeResourceVersion("git", "2.0"),
-        before = """
-            resources:
+    void findPinnedVersion() {
+        rewriteRun(
+            spec -> spec.recipe(new FindPinnedResource("git")),
+          //language=yaml
+          yaml(
+            """
+              resources:
               - name: git-repo
                 type: git
                 version: 1.0
@@ -32,43 +38,51 @@ class ChangeResourceVersionTest : YamlRecipeTest {
                 version: 2.0
               - name: git-repo3
                 type: git
-        """,
-        after = """
-            resources:
+              """,
+            """
+              resources:
               - name: git-repo
                 type: git
-                version: 2.0
+                ~~>version: 1.0
               - name: git-repo2
                 type: git
-                version: 2.0
+                ~~>version: 2.0
               - name: git-repo3
                 type: git
-                version: 2.0
-        """
-    )
+              """
+          )
+        );
+    }
 
     @Test
-    fun unpinVersion() = assertChanged(
-        recipe = ChangeResourceVersion("git", null),
-        before = """
-            resources:
+    void findPinnedVersionForAnyResource() {
+        rewriteRun(
+          spec -> spec.recipe(new FindPinnedResource(null)),
+          //language=yaml
+          yaml(
+            """
+              resources:
               - name: git-repo
                 type: git
                 version: 1.0
               - name: git-repo2
-                type: git
+                type: another
                 version: 2.0
               - name: git-repo3
                 type: git
-        """,
-        after = """
-            resources:
+              """,
+            """
+              resources:
               - name: git-repo
                 type: git
+                ~~>version: 1.0
               - name: git-repo2
-                type: git
+                type: another
+                ~~>version: 2.0
               - name: git-repo3
                 type: git
-        """
-    )
+              """
+          )
+        );
+    }
 }
