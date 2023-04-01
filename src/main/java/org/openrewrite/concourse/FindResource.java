@@ -54,12 +54,12 @@ public class FindResource extends Recipe {
         JsonPathMatcher resource = new JsonPathMatcher("$.resources[*].type");
         return new YamlVisitor<ExecutionContext>() {
             @Override
-            public Yaml visitMappingEntry(Yaml.Mapping.Entry entry, ExecutionContext executionContext) {
+            public Yaml visitMappingEntry(Yaml.Mapping.Entry entry, ExecutionContext ctx) {
                 if (resource.matches(getCursor()) && entry.getValue() instanceof Yaml.Scalar &&
                         ((Yaml.Scalar) entry.getValue()).getValue().equals(type)) {
                     return entry.withMarkers(entry.getMarkers().searchResult());
                 }
-                return super.visitMappingEntry(entry, executionContext);
+                return super.visitMappingEntry(entry, ctx);
             }
         };
     }
