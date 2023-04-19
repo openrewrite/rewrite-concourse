@@ -10,7 +10,6 @@ val rewriteVersion = rewriteRecipe.rewriteVersion.get()
 dependencies {
     implementation(platform("org.openrewrite:rewrite-bom:${rewriteVersion}"))
     implementation("org.openrewrite:rewrite-yaml")
-    runtimeOnly("com.fasterxml.jackson.core:jackson-core:2.13.+")
 
     compileOnly("org.projectlombok:lombok:latest.release")
     annotationProcessor("org.projectlombok:lombok:latest.release")
