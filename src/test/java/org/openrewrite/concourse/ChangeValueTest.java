@@ -17,6 +17,7 @@ package org.openrewrite.concourse;
 
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
+import org.openrewrite.DocumentExample;
 import org.openrewrite.Issue;
 import org.openrewrite.test.RewriteTest;
 import org.openrewrite.test.SourceSpec;
@@ -24,6 +25,7 @@ import org.openrewrite.test.SourceSpec;
 import static org.openrewrite.yaml.Assertions.yaml;
 
 class ChangeValueTest implements RewriteTest {
+    @DocumentExample
     @Test
     void updateGitURI() {
         rewriteRun(

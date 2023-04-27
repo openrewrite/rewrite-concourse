@@ -16,12 +16,14 @@
 package org.openrewrite.concourse.search;
 
 import org.junit.jupiter.api.Test;
+import org.openrewrite.DocumentExample;
 import org.openrewrite.test.RewriteTest;
 
 import static org.openrewrite.yaml.Assertions.yaml;
 
 class FindPinnedResourceTest implements RewriteTest {
 
+    @DocumentExample
     @Test
     void findPinnedVersion() {
         rewriteRun(

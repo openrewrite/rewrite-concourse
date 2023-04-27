@@ -16,12 +16,14 @@
 package org.openrewrite.concourse;
 
 import org.junit.jupiter.api.Test;
+import org.openrewrite.DocumentExample;
 import org.openrewrite.test.RewriteTest;
 
 import static org.openrewrite.yaml.Assertions.yaml;
 
 class FindResourceTest implements RewriteTest {
 
+    @DocumentExample
     @Test
     void concourseResource() {
         rewriteRun(
