@@ -15,14 +15,20 @@
  */
 package org.openrewrite.concourse.search;
 
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.Value;
 import org.openrewrite.Option;
 import org.openrewrite.Recipe;
 import org.openrewrite.internal.lang.Nullable;
 import org.openrewrite.yaml.search.FindKey;
 
 import java.time.Duration;
+import java.util.Collections;
+import java.util.List;
 
+@Value
+@EqualsAndHashCode(callSuper = true)
 public class FindPinnedResource extends Recipe {
     @Option(displayName = "Resource type",
             description = "The resource type to search for. Leave empty to find all pins.",
@@ -30,7 +36,7 @@ public class FindPinnedResource extends Recipe {
             required = false)
     @Nullable
     @Getter
-    private final String resourceType;
+    String resourceType;
 
     @Override
     public String getDisplayName() {
@@ -47,11 +53,11 @@ public class FindPinnedResource extends Recipe {
         return Duration.ofMinutes(5);
     }
 
-    public FindPinnedResource(@Nullable String resourceType) {
-        this.resourceType = resourceType;
+    @Override
+    public List<Recipe> getRecipeList() {
         String search = "$.resources[" +
-                (resourceType == null ? "*" : "?(@.type == '" + resourceType + "')") +
-                "].version";
-        doNext(new FindKey(search));
+                        (resourceType == null ? "*" : "?(@.type == '" + resourceType + "')") +
+                        "].version";
+        return Collections.singletonList(new FindKey(search));
     }
 }

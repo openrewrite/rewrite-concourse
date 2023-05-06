@@ -20,6 +20,7 @@ import lombok.Value;
 import org.openrewrite.ExecutionContext;
 import org.openrewrite.Option;
 import org.openrewrite.Recipe;
+import org.openrewrite.marker.SearchResult;
 import org.openrewrite.yaml.JsonPathMatcher;
 import org.openrewrite.yaml.YamlVisitor;
 import org.openrewrite.yaml.tree.Yaml;
@@ -50,14 +51,14 @@ public class FindResource extends Recipe {
     }
 
     @Override
-    protected YamlVisitor<ExecutionContext> getVisitor() {
+    public YamlVisitor<ExecutionContext> getVisitor() {
         JsonPathMatcher resource = new JsonPathMatcher("$.resources[*].type");
         return new YamlVisitor<ExecutionContext>() {
             @Override
             public Yaml visitMappingEntry(Yaml.Mapping.Entry entry, ExecutionContext ctx) {
                 if (resource.matches(getCursor()) && entry.getValue() instanceof Yaml.Scalar &&
                         ((Yaml.Scalar) entry.getValue()).getValue().equals(type)) {
-                    return entry.withMarkers(entry.getMarkers().searchResult());
+                    return SearchResult.found(entry);
                 }
                 return super.visitMappingEntry(entry, ctx);
             }

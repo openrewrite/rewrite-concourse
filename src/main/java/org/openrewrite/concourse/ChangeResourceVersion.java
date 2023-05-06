@@ -60,7 +60,7 @@ public class ChangeResourceVersion extends Recipe {
     }
 
     @Override
-    protected YamlVisitor<ExecutionContext> getVisitor() {
+    public YamlVisitor<ExecutionContext> getVisitor() {
         JsonPathMatcher resourceMatcher = new JsonPathMatcher("$.resources[?(@.type == '" + resourceType + "')]");
         JsonPathMatcher versionMatcher = new JsonPathMatcher("$.resources[?(@.type == '" + resourceType + "')].version");
         return new YamlVisitor<ExecutionContext>() {
@@ -68,8 +68,9 @@ public class ChangeResourceVersion extends Recipe {
             public Yaml visitMapping(Yaml.Mapping mapping, ExecutionContext ctx) {
                 if (resourceMatcher.matches(getCursor())) {
                     if (version != null && mapping.getEntries().stream().noneMatch(e -> "version".equals(e.getKey().getValue()))) {
+                        //noinspection OptionalGetWithoutIsPresent
                         Yaml.Mapping versionMapping = (Yaml.Mapping) new YamlParser().parse("version: " + version)
-                                .get(0).getDocuments().get(0).getBlock();
+                                .findFirst().get().getDocuments().get(0).getBlock();
                         Yaml.Mapping.Entry versionEntry = versionMapping.getEntries().get(0);
                         versionEntry = autoFormat(versionEntry, ctx, getCursor());
                         return mapping.withEntries(ListUtils.concat(mapping.getEntries(), versionEntry));

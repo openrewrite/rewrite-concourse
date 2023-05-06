@@ -23,6 +23,10 @@ import org.openrewrite.Recipe;
 import org.openrewrite.internal.lang.Nullable;
 
 import java.time.Duration;
+import java.util.Collections;
+import java.util.List;
+
+import static java.util.Collections.singletonList;
 
 @Value
 @EqualsAndHashCode(callSuper = true)
@@ -62,10 +66,9 @@ public class UpdateGitResourceUri extends Recipe {
         return Duration.ofMinutes(5);
     }
 
-    public UpdateGitResourceUri(@Nullable String oldURIPattern, String newURI, @Nullable String fileMatcher) {
-        this.oldURIPattern = oldURIPattern;
-        this.newURI = newURI;
-        this.fileMatcher = fileMatcher;
-        doNext(new ChangeValue("$.resources[?(@.type == 'git')].source.uri", oldURIPattern, newURI, fileMatcher));
+    @Override
+    public List<Recipe> getRecipeList() {
+        return singletonList(new ChangeValue("$.resources[?(@.type == 'git')].source.uri",
+                oldURIPattern, newURI, fileMatcher));
     }
 }

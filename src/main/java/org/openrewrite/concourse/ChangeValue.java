@@ -18,7 +18,6 @@ package org.openrewrite.concourse;
 import lombok.EqualsAndHashCode;
 import lombok.Value;
 import org.openrewrite.*;
-import org.openrewrite.internal.ListUtils;
 import org.openrewrite.internal.lang.Nullable;
 import org.openrewrite.yaml.JsonPathMatcher;
 import org.openrewrite.yaml.YamlIsoVisitor;
@@ -35,7 +34,7 @@ import java.util.regex.PatternSyntaxException;
 
 @Value
 @EqualsAndHashCode(callSuper = true)
-public class ChangeValue extends Recipe {
+public class ChangeValue extends ScanningRecipe<List<JsonPathMatcher>> {
     @Option(displayName = "Key path",
             description = "The key to match and replace.",
             example = "$.resources[?(@.type == 'git')].source.uri")
@@ -92,74 +91,86 @@ public class ChangeValue extends Recipe {
     }
 
     @Override
-    protected List<SourceFile> visit(List<SourceFile> before, ExecutionContext ctx) {
-        JsonPathMatcher keyPathMatcher = new JsonPathMatcher(keyPath);
-        Pattern oldValuePattern = oldValue == null ? null : Pattern.compile(oldValue);
-        List<JsonPathMatcher> parametersToChange = new ArrayList<>();
+    public List<JsonPathMatcher> getInitialValue() {
+        return new ArrayList<>();
+    }
 
-        YamlVisitor<ExecutionContext> findParametersToChange = new YamlVisitor<ExecutionContext>() {
+    @Override
+    public TreeVisitor<?, ExecutionContext> getScanner(List<JsonPathMatcher> parametersToChange) {
+        JsonPathMatcher keyPathMatcher = new JsonPathMatcher(keyPath);
+        return new YamlVisitor<ExecutionContext>() {
             @Override
             public Yaml visitMappingEntry(Yaml.Mapping.Entry entry, ExecutionContext ctx) {
                 if (keyPathMatcher.matches(getCursor()) && entry.getValue() instanceof Yaml.Scalar &&
-                        Parameters.isParameter(entry.getValue())) {
+                    Parameters.isParameter(entry.getValue())) {
                     parametersToChange.add(Parameters.toJsonPath(entry.getValue()));
                 }
                 return super.visitMappingEntry(entry, ctx);
             }
         };
+    }
 
-        for (SourceFile sourceFile : before) {
-            findParametersToChange.visit(sourceFile, ctx);
-        }
-
-        return ListUtils.map(before, sourceFile -> {
-            if (!(sourceFile instanceof Yaml.Documents)) {
-                return sourceFile;
+    @Override
+    public TreeVisitor<?, ExecutionContext> getVisitor(List<JsonPathMatcher> parametersToChange) {
+        JsonPathMatcher keyPathMatcher = new JsonPathMatcher(keyPath);
+        Pattern oldValuePattern = oldValue == null ? null : Pattern.compile(oldValue);
+        return new YamlIsoVisitor<ExecutionContext>() {
+            @Override
+            public @Nullable Yaml visit(@Nullable Tree tree, ExecutionContext executionContext) {
+                if(tree instanceof Yaml.Documents) {
+                    Yaml.Documents sourceFile = (Yaml.Documents) tree;
+                    boolean matchesFile = fileMatcher == null;
+                    if (!matchesFile) {
+                        Path sourcePath = sourceFile.getSourcePath();
+                        PathMatcher pathMatcher = sourcePath.getFileSystem().getPathMatcher("glob:" + fileMatcher);
+                        matchesFile = pathMatcher.matches(sourcePath);
+                    }
+                    if(!matchesFile) {
+                        return sourceFile;
+                    }
+                    Yaml t = super.visit(tree, executionContext);
+                    String askeyPath = getCursor().pollMessage("askeyPath");
+                    while(askeyPath != null) {
+                        t = (Yaml) new ChangeValue(askeyPath, null, newValue, fileMatcher).getVisitor(parametersToChange)
+                                .visitNonNull(t, executionContext);
+                        askeyPath = getCursor().pollMessage("askeyPath");
+                    }
+                    return t;
+                } else {
+                    return super.visit(tree, executionContext);
+                }
             }
 
-            boolean matchesFile = fileMatcher == null;
-            if (!matchesFile) {
-                Path sourcePath = sourceFile.getSourcePath();
-                PathMatcher pathMatcher = sourcePath.getFileSystem().getPathMatcher("glob:" + fileMatcher);
-                matchesFile = pathMatcher.matches(sourcePath);
+            @Override
+            public Yaml.Mapping.Entry visitMappingEntry(Yaml.Mapping.Entry entry, ExecutionContext ctx) {
+                Yaml.Mapping.Entry e = super.visitMappingEntry(entry, ctx);
+                for (JsonPathMatcher changeParam : parametersToChange) {
+                    e = maybeReplaceValue(e, changeParam);
+                }
+                e = maybeReplaceValue(e, keyPathMatcher);
+                return e;
             }
 
-            if (matchesFile) {
-                return (SourceFile) new YamlIsoVisitor<ExecutionContext>() {
-                    @Override
-                    public Yaml.Mapping.Entry visitMappingEntry(Yaml.Mapping.Entry entry, ExecutionContext ctx) {
-                        Yaml.Mapping.Entry e = super.visitMappingEntry(entry, ctx);
-                        for (JsonPathMatcher changeParam : parametersToChange) {
-                            e = maybeReplaceValue(e, changeParam);
+            private Yaml.Mapping.Entry maybeReplaceValue(Yaml.Mapping.Entry entry, JsonPathMatcher matcher) {
+                if (matcher.matches(getCursor()) && e.getValue() instanceof Yaml.Scalar) {
+                    Yaml.Scalar scalar = (Yaml.Scalar) e.getValue();
+                    // do not replace the original value if it is parameterized.
+                    if (Parameters.isParameter(scalar)) {
+                        // if we're on a redirected parameter, recurse on the newly-parameterized value
+                        if (!keyPathMatcher.matches(getCursor())) {
+                            String value = scalar.getValue();
+                            String asKeyPath = "$." + scalar.getValue().substring(2, value.length() - 2);
+                            getCursor().putMessageOnFirstEnclosing(Yaml.Documents.class, "asKeyPath", asKeyPath);
                         }
-                        e = maybeReplaceValue(e, keyPathMatcher);
                         return e;
                     }
 
-                    private Yaml.Mapping.Entry maybeReplaceValue(Yaml.Mapping.Entry e, JsonPathMatcher matcher) {
-                        if (matcher.matches(getCursor()) && e.getValue() instanceof Yaml.Scalar) {
-                            Yaml.Scalar scalar = (Yaml.Scalar) e.getValue();
-                            // do not replace the original value if it is parameterized.
-                            if (Parameters.isParameter(scalar)) {
-                                // if we're on a redirected parameter, recurse on the newly-parameterized value
-                                if (!keyPathMatcher.matches(getCursor())) {
-                                    String value = scalar.getValue();
-                                    String asKeyPath = "$." + scalar.getValue().substring(2, value.length() - 2);
-                                    doNext(new ChangeValue(asKeyPath, null, newValue, fileMatcher));
-                                }
-                                return e;
-                            }
-
-                            if (oldValuePattern == null || oldValuePattern.matcher(scalar.getValue()).matches()) {
-                                e = e.withValue(scalar.withValue(newValue));
-                            }
-                        }
-                        return e;
+                    if (oldValuePattern == null || oldValuePattern.matcher(scalar.getValue()).matches()) {
+                        e = e.withValue(scalar.withValue(newValue));
                     }
-                }.visitNonNull(sourceFile, ctx);
+                }
+                return e;
             }
-
-            return sourceFile;
-        });
+        };
     }
 }
