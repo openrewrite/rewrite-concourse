@@ -102,7 +102,7 @@ public class ChangeValue extends ScanningRecipe<List<JsonPathMatcher>> {
             @Override
             public Yaml visitMappingEntry(Yaml.Mapping.Entry entry, ExecutionContext ctx) {
                 if (keyPathMatcher.matches(getCursor()) && entry.getValue() instanceof Yaml.Scalar &&
-                    Parameters.isParameter(entry.getValue())) {
+                        Parameters.isParameter(entry.getValue())) {
                     parametersToChange.add(Parameters.toJsonPath(entry.getValue()));
                 }
                 return super.visitMappingEntry(entry, ctx);
@@ -116,8 +116,8 @@ public class ChangeValue extends ScanningRecipe<List<JsonPathMatcher>> {
         Pattern oldValuePattern = oldValue == null ? null : Pattern.compile(oldValue);
         return new YamlIsoVisitor<ExecutionContext>() {
             @Override
-            public @Nullable Yaml visit(@Nullable Tree tree, ExecutionContext executionContext) {
-                if(tree instanceof Yaml.Documents) {
+            public @Nullable Yaml visit(@Nullable Tree tree, ExecutionContext ctx) {
+                if (tree instanceof Yaml.Documents) {
                     Yaml.Documents sourceFile = (Yaml.Documents) tree;
                     boolean matchesFile = fileMatcher == null;
                     if (!matchesFile) {
@@ -125,19 +125,19 @@ public class ChangeValue extends ScanningRecipe<List<JsonPathMatcher>> {
                         PathMatcher pathMatcher = sourcePath.getFileSystem().getPathMatcher("glob:" + fileMatcher);
                         matchesFile = pathMatcher.matches(sourcePath);
                     }
-                    if(!matchesFile) {
+                    if (!matchesFile) {
                         return sourceFile;
                     }
-                    Yaml t = super.visit(tree, executionContext);
-                    String askeyPath = getCursor().pollMessage("askeyPath");
-                    while(askeyPath != null) {
-                        t = (Yaml) new ChangeValue(askeyPath, null, newValue, fileMatcher).getVisitor(parametersToChange)
-                                .visitNonNull(t, executionContext);
-                        askeyPath = getCursor().pollMessage("askeyPath");
+                    Yaml t = super.visit(tree, ctx);
+                    String asKeyPath = getCursor().pollMessage("asKeyPath");
+                    while (asKeyPath != null) {
+                        t = (Yaml) new org.openrewrite.yaml.ChangeValue(asKeyPath, newValue).getVisitor()
+                                .visitNonNull(t, ctx);
+                        asKeyPath = getCursor().pollMessage("asKeyPath");
                     }
                     return t;
                 } else {
-                    return super.visit(tree, executionContext);
+                    return super.visit(tree, ctx);
                 }
             }
 
@@ -152,24 +152,24 @@ public class ChangeValue extends ScanningRecipe<List<JsonPathMatcher>> {
             }
 
             private Yaml.Mapping.Entry maybeReplaceValue(Yaml.Mapping.Entry entry, JsonPathMatcher matcher) {
-                if (matcher.matches(getCursor()) && e.getValue() instanceof Yaml.Scalar) {
-                    Yaml.Scalar scalar = (Yaml.Scalar) e.getValue();
+                if (matcher.matches(getCursor()) && entry.getValue() instanceof Yaml.Scalar) {
+                    Yaml.Scalar scalar = (Yaml.Scalar) entry.getValue();
                     // do not replace the original value if it is parameterized.
                     if (Parameters.isParameter(scalar)) {
                         // if we're on a redirected parameter, recurse on the newly-parameterized value
                         if (!keyPathMatcher.matches(getCursor())) {
                             String value = scalar.getValue();
                             String asKeyPath = "$." + scalar.getValue().substring(2, value.length() - 2);
-                            getCursor().putMessageOnFirstEnclosing(Yaml.Documents.class, "asKeyPath", asKeyPath);
+                            getCursor().getRoot().putMessage("asKeyPath", asKeyPath);
                         }
-                        return e;
+                        return entry;
                     }
 
                     if (oldValuePattern == null || oldValuePattern.matcher(scalar.getValue()).matches()) {
-                        e = e.withValue(scalar.withValue(newValue));
+                        entry = entry.withValue(scalar.withValue(newValue));
                     }
                 }
-                return e;
+                return entry;
             }
         };
     }
