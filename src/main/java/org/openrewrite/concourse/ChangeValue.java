@@ -91,7 +91,7 @@ public class ChangeValue extends ScanningRecipe<List<JsonPathMatcher>> {
     }
 
     @Override
-    public List<JsonPathMatcher> getInitialValue() {
+    public List<JsonPathMatcher> getInitialValue(ExecutionContext ctx) {
         return new ArrayList<>();
     }
 
