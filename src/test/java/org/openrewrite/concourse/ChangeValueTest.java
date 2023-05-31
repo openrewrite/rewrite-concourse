@@ -200,7 +200,6 @@ class ChangeValueTest implements RewriteTest {
     }
 
     @Test
-    @Disabled
     @Issue("https://github.com/openrewrite/rewrite-concourse/issues/2")
     void breakInfiniteRecursion() {
         rewriteRun(
