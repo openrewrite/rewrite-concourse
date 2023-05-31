@@ -109,13 +109,6 @@ public class ChangeValue extends ScanningRecipe<ChangeValue.Accumulator> {
             @Override
             public Yaml visitMappingEntry(Yaml.Mapping.Entry entry, ExecutionContext ctx) {
                 if (Parameters.isParameter(entry.getValue())) {
-                    List<String> jsonPaths = getCursor().getPathAsStream()
-                        .filter(Yaml.Mapping.Entry.class::isInstance)
-                        .map(Yaml.Mapping.Entry.class::cast)
-                        .map(Yaml.Mapping.Entry::getKey)
-                        .map(YamlKey::getValue)
-                        .collect(Collectors.toList());
-                    Collections.reverse(jsonPaths);
                     JsonPathMatcher pathKey = getPath(getCursor());
                     JsonPathMatcher pathValue = Parameters.toJsonPath(entry.getValue());
                     acc.getParametersMatchingTable().put(pathKey, pathValue);
