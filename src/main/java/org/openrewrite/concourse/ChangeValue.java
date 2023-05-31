@@ -23,18 +23,19 @@ import org.openrewrite.yaml.JsonPathMatcher;
 import org.openrewrite.yaml.YamlIsoVisitor;
 import org.openrewrite.yaml.YamlVisitor;
 import org.openrewrite.yaml.tree.Yaml;
+import org.openrewrite.yaml.tree.YamlKey;
 
 import java.nio.file.Path;
 import java.nio.file.PathMatcher;
 import java.time.Duration;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
+import java.util.stream.Collectors;
 
 @Value
 @EqualsAndHashCode(callSuper = true)
-public class ChangeValue extends ScanningRecipe<List<JsonPathMatcher>> {
+public class ChangeValue extends ScanningRecipe<ChangeValue.Accumulator> {
     @Option(displayName = "Key path",
             description = "The key to match and replace.",
             example = "$.resources[?(@.type == 'git')].source.uri")
@@ -90,20 +91,49 @@ public class ChangeValue extends ScanningRecipe<List<JsonPathMatcher>> {
         );
     }
 
-    @Override
-    public List<JsonPathMatcher> getInitialValue(ExecutionContext ctx) {
-        return new ArrayList<>();
+    @Value
+    static class Accumulator {
+        Set<JsonPathMatcher> parametersToChange;
+        Map<JsonPathMatcher, JsonPathMatcher> parametersMatchingTable;
     }
 
     @Override
-    public TreeVisitor<?, ExecutionContext> getScanner(List<JsonPathMatcher> parametersToChange) {
+    public Accumulator getInitialValue(ExecutionContext ctx) {
+        return new Accumulator(new HashSet<>(), new HashMap<>());
+    }
+
+    @Override
+    public TreeVisitor<?, ExecutionContext> getScanner(Accumulator acc) {
         JsonPathMatcher keyPathMatcher = new JsonPathMatcher(keyPath);
         return new YamlVisitor<ExecutionContext>() {
             @Override
             public Yaml visitMappingEntry(Yaml.Mapping.Entry entry, ExecutionContext ctx) {
+                if (Parameters.isParameter(entry.getValue())) {
+                    List<String> jsonPaths = getCursor().getPathAsStream()
+                        .filter(Yaml.Mapping.Entry.class::isInstance)
+                        .map(Yaml.Mapping.Entry.class::cast)
+                        .map(Yaml.Mapping.Entry::getKey)
+                        .map(YamlKey::getValue)
+                        .collect(Collectors.toList());
+                    Collections.reverse(jsonPaths);
+                    JsonPathMatcher pathKey = getPath(getCursor());
+                    JsonPathMatcher pathValue = Parameters.toJsonPath(entry.getValue());
+                    acc.getParametersMatchingTable().put(pathKey, pathValue);
+
+                    if (acc.getParametersToChange().contains(pathKey)) {
+                        acc.getParametersToChange().remove(pathKey);
+                        acc.getParametersToChange().add(pathValue);
+                    }
+                }
+
                 if (keyPathMatcher.matches(getCursor()) && entry.getValue() instanceof Yaml.Scalar &&
                         Parameters.isParameter(entry.getValue())) {
-                    parametersToChange.add(Parameters.toJsonPath(entry.getValue()));
+                    JsonPathMatcher pathToChange = Parameters.toJsonPath(entry.getValue());
+                    if (acc.getParametersMatchingTable().containsKey(pathToChange)) {
+                        pathToChange = acc.getParametersMatchingTable().get(pathToChange);
+                    }
+
+                    acc.getParametersToChange().add(pathToChange);
                 }
                 return super.visitMappingEntry(entry, ctx);
             }
@@ -111,7 +141,7 @@ public class ChangeValue extends ScanningRecipe<List<JsonPathMatcher>> {
     }
 
     @Override
-    public TreeVisitor<?, ExecutionContext> getVisitor(List<JsonPathMatcher> parametersToChange) {
+    public TreeVisitor<?, ExecutionContext> getVisitor(Accumulator acc) {
         JsonPathMatcher keyPathMatcher = new JsonPathMatcher(keyPath);
         Pattern oldValuePattern = oldValue == null ? null : Pattern.compile(oldValue);
         return new YamlIsoVisitor<ExecutionContext>() {
@@ -144,9 +174,11 @@ public class ChangeValue extends ScanningRecipe<List<JsonPathMatcher>> {
             @Override
             public Yaml.Mapping.Entry visitMappingEntry(Yaml.Mapping.Entry entry, ExecutionContext ctx) {
                 Yaml.Mapping.Entry e = super.visitMappingEntry(entry, ctx);
-                for (JsonPathMatcher changeParam : parametersToChange) {
-                    e = maybeReplaceValue(e, changeParam);
+                JsonPathMatcher currentPath = getPath(getCursor());
+                if (acc.getParametersToChange().contains(currentPath)) {
+                    e = maybeReplaceValue(e, currentPath);
                 }
+
                 e = maybeReplaceValue(e, keyPathMatcher);
                 return e;
             }
@@ -172,5 +204,16 @@ public class ChangeValue extends ScanningRecipe<List<JsonPathMatcher>> {
                 return entry;
             }
         };
+    }
+
+    private static JsonPathMatcher getPath(Cursor cursor) {
+        List<String> jsonPaths = cursor.getPathAsStream()
+            .filter(Yaml.Mapping.Entry.class::isInstance)
+            .map(Yaml.Mapping.Entry.class::cast)
+            .map(Yaml.Mapping.Entry::getKey)
+            .map(YamlKey::getValue)
+            .collect(Collectors.toList());
+        Collections.reverse(jsonPaths);
+        return new JsonPathMatcher("$." + String.join(".", jsonPaths));
     }
 }
