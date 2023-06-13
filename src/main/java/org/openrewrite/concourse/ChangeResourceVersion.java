@@ -69,8 +69,12 @@ public class ChangeResourceVersion extends Recipe {
                 if (resourceMatcher.matches(getCursor())) {
                     if (version != null && mapping.getEntries().stream().noneMatch(e -> "version".equals(e.getKey().getValue()))) {
                         //noinspection OptionalGetWithoutIsPresent
-                        Yaml.Mapping versionMapping = (Yaml.Mapping) new YamlParser().parse("version: " + version)
-                                .findFirst().get().getDocuments().get(0).getBlock();
+                        Yaml.Mapping versionMapping = (Yaml.Mapping) new YamlParser()
+                                .parse("version: " + version)
+                                .map(Yaml.Documents.class::cast)
+                                .findFirst()
+                                .get()
+                                .getDocuments().get(0).getBlock();
                         Yaml.Mapping.Entry versionEntry = versionMapping.getEntries().get(0);
                         versionEntry = autoFormat(versionEntry, ctx, getCursor());
                         return mapping.withEntries(ListUtils.concat(mapping.getEntries(), versionEntry));
