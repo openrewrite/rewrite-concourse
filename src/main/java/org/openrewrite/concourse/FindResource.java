@@ -53,7 +53,7 @@ public class FindResource extends Recipe {
     @Override
     public YamlVisitor<ExecutionContext> getVisitor() {
         JsonPathMatcher resource = new JsonPathMatcher("$.resources[*].type");
-        return new YamlVisitor<ExecutionContext>() {
+        return new YamlVisitor<>() {
             @Override
             public Yaml visitMappingEntry(Yaml.Mapping.Entry entry, ExecutionContext ctx) {
                 if (resource.matches(getCursor()) && entry.getValue() instanceof Yaml.Scalar &&

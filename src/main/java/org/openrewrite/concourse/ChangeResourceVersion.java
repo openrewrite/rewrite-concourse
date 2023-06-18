@@ -63,7 +63,7 @@ public class ChangeResourceVersion extends Recipe {
     public YamlVisitor<ExecutionContext> getVisitor() {
         JsonPathMatcher resourceMatcher = new JsonPathMatcher("$.resources[?(@.type == '" + resourceType + "')]");
         JsonPathMatcher versionMatcher = new JsonPathMatcher("$.resources[?(@.type == '" + resourceType + "')].version");
-        return new YamlVisitor<ExecutionContext>() {
+        return new YamlVisitor<>() {
             @Override
             public Yaml visitMapping(Yaml.Mapping mapping, ExecutionContext ctx) {
                 if (resourceMatcher.matches(getCursor())) {
