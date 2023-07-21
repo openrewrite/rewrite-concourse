@@ -20,6 +20,7 @@ import lombok.Value;
 import org.openrewrite.ExecutionContext;
 import org.openrewrite.Option;
 import org.openrewrite.Recipe;
+import org.openrewrite.TreeVisitor;
 import org.openrewrite.internal.ListUtils;
 import org.openrewrite.internal.lang.Nullable;
 import org.openrewrite.yaml.JsonPathMatcher;
@@ -60,7 +61,7 @@ public class ChangeResourceVersion extends Recipe {
     }
 
     @Override
-    public YamlVisitor<ExecutionContext> getVisitor() {
+    public TreeVisitor<?, ExecutionContext> getVisitor() {
         JsonPathMatcher resourceMatcher = new JsonPathMatcher("$.resources[?(@.type == '" + resourceType + "')]");
         JsonPathMatcher versionMatcher = new JsonPathMatcher("$.resources[?(@.type == '" + resourceType + "')].version");
         return new YamlVisitor<ExecutionContext>() {
