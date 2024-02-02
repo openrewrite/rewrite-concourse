@@ -29,7 +29,7 @@ import org.openrewrite.yaml.tree.Yaml;
 import java.time.Duration;
 
 @Value
-@EqualsAndHashCode(callSuper = true)
+@EqualsAndHashCode(callSuper = false)
 public class FindResource extends Recipe {
     @Option(displayName = "Type",
             description = "Resource type",

@@ -34,7 +34,7 @@ import java.util.regex.PatternSyntaxException;
 import java.util.stream.Collectors;
 
 @Value
-@EqualsAndHashCode(callSuper = true)
+@EqualsAndHashCode(callSuper = false)
 public class ChangeValue extends ScanningRecipe<ChangeValue.Accumulator> {
     @Option(displayName = "Key path",
             description = "The key to match and replace.",

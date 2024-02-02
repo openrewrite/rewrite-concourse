@@ -31,7 +31,7 @@ import org.openrewrite.yaml.tree.Yaml;
 import java.time.Duration;
 
 @Value
-@EqualsAndHashCode(callSuper = true)
+@EqualsAndHashCode(callSuper = false)
 public class ChangeResourceVersion extends Recipe {
     @Option(displayName = "Resource type",
             description = "Update any resources of this type",

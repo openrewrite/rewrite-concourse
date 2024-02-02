@@ -28,7 +28,7 @@ import java.util.Collections;
 import java.util.List;
 
 @Value
-@EqualsAndHashCode(callSuper = true)
+@EqualsAndHashCode(callSuper = false)
 public class FindPinnedResource extends Recipe {
     @Option(displayName = "Resource type",
             description = "The resource type to search for. Leave empty to find all pins.",

@@ -29,7 +29,7 @@ import java.util.List;
 import static java.util.Collections.singletonList;
 
 @Value
-@EqualsAndHashCode(callSuper = true)
+@EqualsAndHashCode(callSuper = false)
 @Incubating(since = "0.1.0")
 public class UpdateGitResourceUri extends Recipe {
     @Option(displayName = "Optional old URI matcher",
