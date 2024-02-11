@@ -43,7 +43,8 @@ public class ChangeValue extends ScanningRecipe<ChangeValue.Accumulator> {
 
     @Option(displayName = "Old value",
             description = "Only change if the existing value matches.",
-            required = false)
+            required = false,
+            example = "https://github.com/openrewrite/rewrite0")
     @Nullable
     String oldValue;
 
@@ -53,7 +54,8 @@ public class ChangeValue extends ScanningRecipe<ChangeValue.Accumulator> {
     }
 
     @Option(displayName = "New value",
-            description = "New value to replace the old value with.")
+            description = "New value to replace the old value with.",
+            example = "git@github.com:openrewrite/rewrite1.git")
     String newValue;
 
     @Option(displayName = "Optional file matcher",
