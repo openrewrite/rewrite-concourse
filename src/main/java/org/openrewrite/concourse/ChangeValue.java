@@ -156,7 +156,7 @@ public class ChangeValue extends ScanningRecipe<ChangeValue.Accumulator> {
                     Yaml t = super.visit(tree, ctx);
                     String asKeyPath = getCursor().pollMessage("asKeyPath");
                     while (asKeyPath != null) {
-                        t = (Yaml) new org.openrewrite.yaml.ChangeValue(asKeyPath, newValue).getVisitor()
+                        t = (Yaml) new org.openrewrite.yaml.ChangeValue(asKeyPath, newValue, null).getVisitor()
                                 .visitNonNull(t, ctx);
                         asKeyPath = getCursor().pollMessage("asKeyPath");
                     }
