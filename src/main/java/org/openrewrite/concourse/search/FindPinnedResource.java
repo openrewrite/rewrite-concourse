@@ -18,9 +18,9 @@ package org.openrewrite.concourse.search;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Value;
+import org.jspecify.annotations.Nullable;
 import org.openrewrite.Option;
 import org.openrewrite.Recipe;
-import org.openrewrite.internal.lang.Nullable;
 import org.openrewrite.yaml.search.FindKey;
 
 import java.time.Duration;
