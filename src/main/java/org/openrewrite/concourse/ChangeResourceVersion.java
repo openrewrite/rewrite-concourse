@@ -85,7 +85,7 @@ public class ChangeResourceVersion extends Recipe {
             }
 
             @Override
-            public Yaml visitMappingEntry(Yaml.Mapping.Entry entry, ExecutionContext ctx) {
+            public @Nullable Yaml visitMappingEntry(Yaml.Mapping.Entry entry, ExecutionContext ctx) {
                 if (versionMatcher.matches(getCursor())) {
                     if (version == null) {
                         //noinspection ConstantConditions
