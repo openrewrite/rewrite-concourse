@@ -13,4 +13,6 @@ dependencies {
 
     compileOnly("org.projectlombok:lombok:latest.release")
     annotationProcessor("org.projectlombok:lombok:latest.release")
+
+    testImplementation("org.openrewrite:rewrite-test")
 }
